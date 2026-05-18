@@ -48,9 +48,9 @@
         </div>
 
         <div id="ui-layer" class="absolute inset-0 p-5 flex flex-col justify-between text-white select-none">
-            <!-- 頂部資訊列：精心防擠壓設計 -->
+            <!-- 頂部資訊列：避開左上角齒輪 -->
             <div class="flex justify-between items-start w-full">
-                <!-- 分數：避開左上角齒輪 -->
+                <!-- 分數 -->
                 <div class="ml-14">
                     <div class="bg-slate-950/70 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 shadow-lg flex items-center gap-3">
                         <div>
@@ -122,6 +122,7 @@
             </div>
         </div>
 
+        <!-- 密碼驗證彈窗 -->
         <div id="password-modal" class="hidden absolute inset-0 bg-slate-950/90 flex items-center justify-center p-6 dialog-overlay backdrop-blur-md">
             <div class="w-full max-w-sm bg-slate-900 rounded-3xl p-6 border border-white/10 shadow-2xl text-white text-center">
                 <div class="text-3xl mb-2">🔑</div>
@@ -135,6 +136,7 @@
             </div>
         </div>
 
+        <!-- 系統提示彈窗 -->
         <div id="alert-modal" class="hidden absolute inset-0 bg-slate-950/80 flex items-center justify-center p-6 dialog-overlay backdrop-blur-md">
             <div class="w-full max-w-xs bg-slate-900 rounded-3xl p-5 border border-white/10 shadow-2xl text-white text-center">
                 <div id="alert-icon" class="text-3xl mb-2">⚠️</div>
@@ -144,6 +146,7 @@
             </div>
         </div>
 
+        <!-- 刪除確認彈窗 -->
         <div id="confirm-modal" class="hidden absolute inset-0 bg-slate-950/80 flex items-center justify-center p-6 dialog-overlay backdrop-blur-md">
             <div class="w-full max-w-xs bg-slate-900 rounded-3xl p-5 border border-white/10 shadow-2xl text-white text-center">
                 <div class="text-3xl mb-2">❓</div>
@@ -198,6 +201,7 @@
         let clouds = []; // 動態雲朵背景
         let quizSession = null;
 
+        // 客製化 Alert 實作
         function customAlert(message, title = "系統提示", icon = "⚠️") {
             alertTitle.innerText = title;
             alertMessage.innerText = message;
@@ -211,6 +215,7 @@
             });
         }
 
+        // 客製化 Confirm 實作
         function customConfirm(message) {
             confirmMessage.innerText = message;
             confirmModal.classList.remove('hidden');
@@ -226,6 +231,7 @@
             });
         }
 
+        // 客製化 Password Prompt 實作
         function openPasswordPrompt() {
             passwordInput.value = "";
             passwordModal.classList.remove('hidden');
@@ -242,6 +248,7 @@
             });
         }
 
+        // 預設經典題庫
         const defaultQuizData = [
             { q: "下列何者為「坪」的正確造詞？", options: ["草坪", "坪價", "坪論", "坪等"], correctVal: "草坪" },
             { q: "下列何者「拓」的讀音與其他三者不同？", options: ["拓展", "開拓", "拓印", "拓荒"], correctVal: "開拓" },
@@ -263,6 +270,7 @@
         let masterQuizData = [...defaultQuizData];
         let currentQuizPool = [];
 
+        // 讀取題庫
         function loadQuiz() {
             const saved = localStorage.getItem('sky_fighter_quiz_data');
             if (saved) {
@@ -274,11 +282,13 @@
             }
         }
 
+        // 儲存題庫
         function saveQuiz() {
             localStorage.setItem('sky_fighter_quiz_data', JSON.stringify(masterQuizData));
             renderAdminList();
         }
 
+        // 渲染後台清單
         function renderAdminList() {
             const list = document.getElementById('question-list');
             list.innerHTML = masterQuizData.map((item, i) => `
@@ -300,6 +310,7 @@
             }
         }
 
+        // 新增題目
         saveQBtn.onclick = async () => {
             const q = document.getElementById('new-q').value.trim();
             const opts = [
@@ -322,6 +333,7 @@
             await customAlert("題目已成功存入題庫中！", "新增成功", "✅");
         };
 
+        // 齒輪後台按鈕觸發
         adminEntrance.onclick = async () => {
             wasRunningBeforeAdmin = gameActive;
             gameActive = false;
@@ -403,6 +415,34 @@
             }
         };
 
+        class Cloud {
+            constructor(spawnOnScreen = false) {
+                this.reset(spawnOnScreen);
+            }
+            reset(spawnOnScreen = false) {
+                this.x = Math.random() * width;
+                this.y = spawnOnScreen ? Math.random() * height : -120;
+                this.speed = 0.5 + Math.random() * 1.5;
+                this.radius = 25 + Math.random() * 35;
+                this.opacity = 0.08 + Math.random() * 0.12;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.beginPath();
+                // 繪製多重圓形堆疊呈現蓬鬆白雲
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.arc(this.x - this.radius * 0.5, this.y + this.radius * 0.1, this.radius * 0.7, 0, Math.PI * 2);
+                ctx.arc(this.x + this.radius * 0.5, this.y + this.radius * 0.1, this.radius * 0.7, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            update() {
+                this.y += this.speed;
+                if (this.y > height + 100) {
+                    this.reset(false);
+                }
+            }
+        }
+
         function resize() {
             width = canvas.parentElement.clientWidth;
             height = canvas.parentElement.clientHeight;
@@ -422,84 +462,26 @@
         canvas.addEventListener('touchstart', handleMove, {passive: false});
         canvas.addEventListener('touchmove', handleMove, {passive: false});
 
-        // 背景雲朵元件 (增加速度感)
-        class Cloud {
-            constructor() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * -height;
-                this.size = Math.random() * 80 + 40;
-                this.speed = Math.random() * 1.5 + 0.5;
-            }
-            draw() {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.arc(this.x + this.size * 0.5, this.y - this.size * 0.2, this.size * 0.8, 0, Math.PI * 2);
-                ctx.arc(this.x - this.size * 0.5, this.y - this.size * 0.2, this.size * 0.8, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            update() {
-                this.y += this.speed;
-                if (this.y > height + 100) {
-                    this.y = -150;
-                    this.x = Math.random() * width;
-                }
-            }
-        }
-
-        // 彈藥系統
         class Bullet {
-            constructor(x, y) { this.x = x; this.y = y; this.speed = 13; }
-            draw() { 
-                ctx.fillStyle = '#fbbf24'; 
-                ctx.beginPath(); 
-                ctx.arc(this.x, this.y, 4, 0, Math.PI*2); 
-                ctx.fill(); 
-                // 外圍微光
-                ctx.fillStyle = 'rgba(251, 191, 36, 0.4)';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, 8, 0, Math.PI*2);
-                ctx.fill();
-            }
+            constructor(x, y) { this.x = x; this.y = y; this.speed = 15; } // 子彈飛行速度提升至 15
+            draw() { ctx.fillStyle = '#fde047'; ctx.beginPath(); ctx.arc(this.x, this.y, 3, 0, Math.PI*2); ctx.fill(); }
             update() { this.y -= this.speed; }
         }
 
         class Enemy {
             constructor(isGold = false) {
-                this.x = Math.random() * (width - 70) + 35;
-                this.y = -60;
-                this.speed = isGold ? 1.8 : (2 + Math.random() * 3);
+                this.x = Math.random() * (width - 60) + 30;
+                this.y = -50;
+                // 一般敵機提升至 2.8~6.3；黃金敵機提升至 2.2
+                this.speed = isGold ? 2.2 : (2.8 + Math.random() * 3.5);
                 this.hp = isGold ? 5 : 1;
+                this.radius = 20; // 碰撞半徑設定
                 this.color = isGold ? '#fbbf24' : '#ef4444';
                 this.isGold = isGold;
-                this.radius = 22;
             }
             draw() {
-                ctx.save();
-                ctx.translate(this.x, this.y);
-                
-                // 噴射尾氣
-                ctx.fillStyle = 'rgba(239, 68, 68, 0.3)';
-                ctx.beginPath();
-                ctx.ellipse(0, -18, 6, 12, 0, 0, Math.PI*2);
-                ctx.fill();
-
-                // 敵機三角形本體
                 ctx.fillStyle = this.color;
-                ctx.beginPath(); 
-                ctx.moveTo(0, 18); 
-                ctx.lineTo(-22, -12); 
-                ctx.lineTo(22, -12); 
-                ctx.closePath(); 
-                ctx.fill();
-
-                // 引擎裝飾
-                ctx.fillStyle = '#1e293b';
-                ctx.beginPath();
-                ctx.arc(0, -3, 8, 0, Math.PI*2);
-                ctx.fill();
-
-                ctx.restore();
+                ctx.beginPath(); ctx.moveTo(this.x, this.y + 20); ctx.lineTo(this.x - 20, this.y - 10); ctx.lineTo(this.x + 20, this.y - 10); ctx.closePath(); ctx.fill();
             }
             update() { this.y += this.speed; }
         }
@@ -552,7 +534,7 @@
                             ctx.setLineDash([]);
                         }
 
-                        // 選項主體卡片 (流線微帶立體感)
+                        // 選項主體卡片
                         ctx.fillStyle = 'rgba(255, 255, 255, 0.95)'; 
                         ctx.fillRect(i * bw + 8, this.optionsY, bw - 16, 56);
                         ctx.strokeStyle = '#e2e8f0';
@@ -577,45 +559,47 @@
 
         function animate() {
             if (!gameActive) return;
-
-            // 畫出蔚藍漸層天空
+            
+            // 天空背景漸層
             const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
             skyGrad.addColorStop(0, '#0284c7');
             skyGrad.addColorStop(1, '#38bdf8');
             ctx.fillStyle = skyGrad; 
             ctx.fillRect(0, 0, width, height);
 
-            // 背景動態雲朵繪製與更新
-            clouds.forEach(c => { c.update(); c.draw(); });
+            // 1. 優先繪製雲朵背景，避免遮擋飛機、敵機、子彈
+            clouds.forEach(c => {
+                c.update();
+                c.draw();
+            });
 
+            // 2. 玩家與射擊更新
             player.update(); 
             player.draw();
 
-            // 定時開火
-            if (frameCount % 9 === 0) {
-                bullets.push(new Bullet(player.x, player.y - 25));
-            }
+            // 子彈每 6 幀發射一顆（頻率變密）
+            if (frameCount % 6 === 0) bullets.push(new Bullet(player.x, player.y - 20));
 
-            // 沒有題目時生成常規敵機
+            // 3. 沒有題目時，固定間隔產生常規與黃金敵機
             if (!quizSession) {
                 if (frameCount % 45 === 0) {
                     enemies.push(new Enemy(Math.random() < 0.12));
                 }
             }
 
-            // 考題間隔觸發 (每隔一段時間觸發一次問答)
+            // 4. 考題間隔觸發 (每隔一段時間觸發一次問答)
             if (!quizSession && Date.now() - lastQuizTime > 10000 && frameCount > 100) {
                 quizSession = new Quiz();
             }
 
-            // 彈藥更新
+            // 5. 彈藥更新
             bullets.forEach((b, i) => { 
                 b.update(); 
                 b.draw(); 
                 if (b.y < -10) bullets.splice(i, 1); 
             });
 
-            // 敵機更新與碰撞判定
+            // 6. 敵機更新與碰撞判定
             enemies.forEach((e, ei) => {
                 e.update(); 
                 e.draw();
@@ -646,7 +630,7 @@
                 if (e.y > height + 60) enemies.splice(ei, 1);
             });
 
-            // 考題答題判定
+            // 7. 考題答題判定
             if (quizSession) {
                 quizSession.update(); 
                 quizSession.draw();
@@ -687,10 +671,10 @@
             enemies = []; 
             quizSession = null;
             
-            // 雲朵初始
+            // 初始化動態雲朵背景
             clouds = [];
             for (let i = 0; i < 6; i++) {
-                clouds.push(new Cloud());
+                clouds.push(new Cloud(true)); // 首批雲朵隨機分佈在螢幕上
             }
 
             currentQuizPool = [...masterQuizData].sort(()=>Math.random()-0.5);
