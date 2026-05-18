@@ -1,560 +1,721 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>火柴人語文跑酷 - 完整動作版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sky Fighter - 國語問答大冒險</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             margin: 0;
             overflow: hidden;
-            background-color: #f4f4f4;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            touch-action: manipulation;
-        }
-        #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
-        canvas {
-            background-color: #ffffff;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            border-radius: 12px;
-            max-width: 95%;
+            background-color: #0b1329;
+            font-family: 'Inter', 'Microsoft JhengHei', sans-serif;
             touch-action: none;
         }
-        .ui-overlay {
+        canvas {
+            display: block;
+            touch-action: none;
+        }
+        #admin-btn-wrapper {
             position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
+            top: 1rem;
+            left: 1rem;
+            z-index: 50;
+            pointer-events: auto;
+        }
+        #ui-layer {
             pointer-events: none;
-            user-select: none;
-            z-index: 5;
         }
-        #menu-trigger {
-            position: absolute;
-            top: 20px;
-            left: 20px;
+        .admin-modal, .dialog-overlay {
             z-index: 100;
-            background: white;
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
         }
-        #menu-trigger span {
-            display: block;
-            width: 20px;
-            height: 2px;
-            background: #333;
-        }
-        #admin-trigger {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 100;
-            background: white;
-            padding: 8px;
-            border-radius: 50%;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            cursor: pointer;
-        }
-        #lesson-menu {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 150;
-        }
-        .menu-content {
-            background: white;
-            padding: 2rem;
-            border-radius: 1.5rem;
-            width: 340px;
-            max-height: 80vh;
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-            display: flex;
-            flex-direction: column;
-        }
-        #lesson-list {
-            overflow-y: auto;
-            margin-bottom: 1rem;
-        }
-        #admin-panel {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 360px;
-            height: 100%;
-            background: white;
-            box-shadow: -5px 0 20px rgba(0,0,0,0.2);
-            z-index: 101;
-            display: none;
-            flex-direction: column;
-            padding: 20px;
-            overflow-y: auto;
-        }
-        #quiz-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 20;
-            padding: 20px;
-        }
-        #game-over, #win-screen {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.95);
-            padding: 2.5rem;
-            border-radius: 1.5rem;
-            text-align: center;
-            display: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            z-index: 30;
-        }
-        .option-btn, .menu-btn {
-            background: white;
-            border: 2px solid #e2e8f0;
-            padding: 12px 20px;
-            margin: 6px 0;
-            border-radius: 12px;
-            width: 100%;
-            font-weight: bold;
-            transition: all 0.2s;
-            cursor: pointer;
-            text-align: center;
-        }
-        .menu-btn:hover { background: #f1f5f9; border-color: #3b82f6; }
-        .menu-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
-        .admin-input, .admin-select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-        .label-text {
-            font-size: 12px;
-            color: #666;
-            font-weight: bold;
-            margin-bottom: 2px;
-            display: block;
-        }
-        .admin-lesson-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: #f9fafb;
-            padding: 8px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body>
+<body class="flex items-center justify-center h-screen w-screen p-4 bg-slate-950">
 
-<div id="game-container">
-    <div id="menu-trigger" onclick="toggleLessonMenu()">
-        <span></span><span></span><span></span>
-    </div>
-    <div id="admin-trigger" onclick="toggleAdminPanel()">⚙️</div>
+    <div id="game-container" class="relative w-full aspect-[4/3] max-w-[850px] max-h-[637px] overflow-hidden bg-sky-900 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-4 border-slate-800/80">
+        
+        <canvas id="gameCanvas" class="absolute inset-0 w-full h-full"></canvas>
+        
+        <!-- 管理者齒輪按鈕 -->
+        <div id="admin-btn-wrapper">
+            <button id="admin-entrance" class="w-11 h-11 flex items-center justify-center bg-slate-900/60 hover:bg-slate-900/90 active:scale-90 rounded-full transition-all text-xl border border-white/20 shadow-lg backdrop-blur-md">
+                ⚙️
+            </button>
+        </div>
 
-    <div id="lesson-menu" onclick="toggleLessonMenu()">
-        <div class="menu-content" onclick="event.stopPropagation()">
-            <h2 class="text-2xl font-black mb-4 text-gray-800">選擇課程</h2>
-            <div id="lesson-list"></div>
-            <button onclick="toggleLessonMenu()" class="mt-2 text-gray-400 text-sm underline">關閉</button>
-        </div>
-    </div>
-
-    <div id="admin-panel" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="font-black text-xl text-gray-800">管理者模式</h3>
-            <button onclick="closeAdminPanel()" class="text-gray-400 hover:text-black">✕</button>
-        </div>
-        <div id="admin-auth-section">
-            <p class="text-sm mb-2 text-gray-500">請輸入密碼：</p>
-            <input type="password" id="admin-password" class="admin-input" placeholder="Password">
-            <button onclick="authAdmin()" class="w-full bg-blue-600 text-white py-2 rounded font-bold">登入</button>
-        </div>
-        <div id="admin-controls" style="display: none;">
-            <div class="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                <h4 class="font-bold mb-3 text-blue-700">課程管理</h4>
-                <div id="admin-lesson-manager" class="mb-4"></div>
-                <div class="flex gap-2">
-                    <input type="text" id="new-lesson-name" class="admin-input mb-0" placeholder="新課程名稱">
-                    <button onclick="addNewLesson()" class="bg-blue-600 text-white px-3 py-1 rounded font-bold text-sm">新增</button>
+        <div id="ui-layer" class="absolute inset-0 p-5 flex flex-col justify-between text-white select-none">
+            <!-- 頂部資訊列：精心防擠壓設計 -->
+            <div class="flex justify-between items-start w-full">
+                <!-- 分數：避開左上角齒輪 -->
+                <div class="ml-14">
+                    <div class="bg-slate-950/70 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 shadow-lg flex items-center gap-3">
+                        <div>
+                            <p class="text-[9px] uppercase tracking-widest text-slate-400 font-bold">SCORE</p>
+                            <p id="score-val" class="text-xl font-black text-yellow-400 tracking-wider">0000</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- 血量 -->
+                <div class="bg-slate-950/70 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 shadow-lg text-right">
+                    <p class="text-[9px] uppercase tracking-widest text-slate-400 font-bold">HEALTH</p>
+                    <div class="w-28 h-3 bg-slate-800 rounded-full mt-1.5 overflow-hidden p-0.5 border border-black/30">
+                        <div id="health-bar" class="h-full bg-gradient-to-r from-red-500 via-orange-500 to-green-500 rounded-full transition-all duration-300" style="width: 100%"></div>
+                    </div>
                 </div>
             </div>
-            <div class="mb-6 p-4 bg-green-50 rounded-xl border border-green-100">
-                <h4 class="font-bold mb-3 text-green-700">新增題目</h4>
-                <label class="label-text">目標課程:</label>
-                <select id="q-lesson-target" class="admin-select"></select>
-                <label class="label-text">問題內容:</label>
-                <input type="text" id="q-text" class="admin-input" placeholder="問題文字">
-                <label class="label-text">選項 A (正確):</label>
-                <input type="text" id="q-opt0" class="admin-input">
-                <label class="label-text">其餘錯誤選項:</label>
-                <input type="text" id="q-opt1" class="admin-input" placeholder="錯誤 1">
-                <input type="text" id="q-opt2" class="admin-input" placeholder="錯誤 2">
-                <input type="text" id="q-opt3" class="admin-input" placeholder="錯誤 3">
-                <button onclick="addNewQuizForm()" class="w-full bg-green-600 text-white py-2 rounded font-bold">確認新增</button>
+
+            <div id="menu" class="absolute inset-0 flex items-center justify-center bg-slate-950/80 pointer-events-auto backdrop-blur-md px-6">
+                <div class="text-center p-8 bg-slate-900/90 rounded-3xl border border-white/10 shadow-2xl max-w-sm w-full transition-all transform scale-100">
+                    <div class="inline-block p-4 bg-yellow-500/10 rounded-full mb-3 text-4xl">🚀</div>
+                    <h1 class="text-4xl font-black mb-1 tracking-tighter italic text-white drop-shadow-md">SKY STORM</h1>
+                    <p class="mb-3 opacity-90 font-bold text-yellow-400 text-base">國語問答大冒險</p>
+                    <p class="mb-6 text-xs text-slate-300 leading-relaxed">
+                        拖移/滑鼠移動你的飛機以攻擊敵機<br>
+                        出現國語考題時，穿過正確答案那條路！
+                    </p>
+                    <button id="start-btn" class="w-full py-4 bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-slate-950 font-black rounded-full transition-all active:scale-95 shadow-[0_4px_14px_rgba(245,158,11,0.4)] text-base tracking-wider">
+                        開始作戰
+                    </button>
+                </div>
             </div>
         </div>
+
+        <div id="admin-modal" class="hidden absolute inset-0 bg-slate-950/95 flex items-center justify-center p-6 admin-modal overflow-y-auto no-scrollbar backdrop-blur-lg">
+            <div class="w-full max-w-md bg-slate-900 rounded-3xl p-6 border border-white/10 shadow-2xl text-white my-auto">
+                <div class="flex justify-between items-center mb-5">
+                    <div>
+                        <h2 class="text-2xl font-black text-yellow-400 tracking-tight">管理中心</h2>
+                        <p class="text-xs text-slate-400">目前遊戲已暫停</p>
+                    </div>
+                    <button id="close-admin-btn" class="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-red-500/20 active:scale-90 rounded-full text-white font-bold transition-all">✕</button>
+                </div>
+                
+                <div class="mb-6 p-4 bg-slate-950/50 rounded-2xl border border-white/5">
+                    <h3 class="text-xs font-bold mb-3 text-sky-400 uppercase tracking-widest">新增國語試題</h3>
+                    <input id="new-q" type="text" placeholder="例如：下列何者為「坪」的正確造詞？" class="w-full bg-slate-900 border border-white/10 rounded-xl p-3 text-sm mb-3 outline-none focus:border-yellow-500 text-white transition-all">
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <input id="opt-0" type="text" placeholder="選項 1" class="bg-slate-900 border border-white/10 rounded-xl p-3 text-sm outline-none focus:border-sky-500 text-white transition-all">
+                        <input id="opt-1" type="text" placeholder="選項 2" class="bg-slate-900 border border-white/10 rounded-xl p-3 text-sm outline-none focus:border-sky-500 text-white transition-all">
+                        <input id="opt-2" type="text" placeholder="選項 3" class="bg-slate-900 border border-white/10 rounded-xl p-3 text-sm outline-none focus:border-sky-500 text-white transition-all">
+                        <input id="opt-3" type="text" placeholder="選項 4" class="bg-slate-900 border border-white/10 rounded-xl p-3 text-sm outline-none focus:border-sky-500 text-white transition-all">
+                    </div>
+                    <div class="flex items-center justify-between mb-4">
+                        <label class="text-xs text-slate-400">設定正確答案項目：</label>
+                        <select id="correct-idx" class="bg-slate-800 border border-white/20 rounded-lg text-xs p-2 text-white outline-none cursor-pointer">
+                            <option value="0">選項 1</option>
+                            <option value="1">選項 2</option>
+                            <option value="2">選項 3</option>
+                            <option value="3">選項 4</option>
+                        </select>
+                    </div>
+                    <button id="save-q-btn" class="w-full py-3 bg-yellow-500 hover:bg-yellow-400 text-slate-950 rounded-xl font-bold text-sm transition-colors shadow-lg shadow-yellow-500/10">儲存题目</button>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-bold mb-3 text-slate-400 uppercase tracking-widest">目前題庫清單</h3>
+                    <div id="question-list" class="space-y-2 max-h-[160px] overflow-y-auto pr-1 no-scrollbar"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="password-modal" class="hidden absolute inset-0 bg-slate-950/90 flex items-center justify-center p-6 dialog-overlay backdrop-blur-md">
+            <div class="w-full max-w-sm bg-slate-900 rounded-3xl p-6 border border-white/10 shadow-2xl text-white text-center">
+                <div class="text-3xl mb-2">🔑</div>
+                <h3 class="text-lg font-bold mb-2 text-yellow-400">管理授權認證</h3>
+                <p class="text-xs text-slate-300 mb-4">請輸入管理授權碼以進入後台管理</p>
+                <input id="admin-password-input" type="password" placeholder="請輸入授權碼" class="w-full bg-slate-950 border border-white/10 rounded-xl p-3 text-sm mb-4 text-center tracking-widest outline-none focus:border-yellow-500 text-white">
+                <div class="flex gap-2">
+                    <button id="password-cancel" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-bold transition-colors">取消</button>
+                    <button id="password-confirm" class="flex-1 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 rounded-xl text-sm font-black transition-colors">驗證進入</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="alert-modal" class="hidden absolute inset-0 bg-slate-950/80 flex items-center justify-center p-6 dialog-overlay backdrop-blur-md">
+            <div class="w-full max-w-xs bg-slate-900 rounded-3xl p-5 border border-white/10 shadow-2xl text-white text-center">
+                <div id="alert-icon" class="text-3xl mb-2">⚠️</div>
+                <h3 id="alert-title" class="text-base font-bold mb-2 text-white">系統提示</h3>
+                <p id="alert-message" class="text-xs text-slate-300 mb-5 leading-relaxed">內容訊息</p>
+                <button id="alert-ok" class="w-full py-2.5 bg-sky-500 hover:bg-sky-400 text-white rounded-xl text-sm font-bold transition-all">確定</button>
+            </div>
+        </div>
+
+        <div id="confirm-modal" class="hidden absolute inset-0 bg-slate-950/80 flex items-center justify-center p-6 dialog-overlay backdrop-blur-md">
+            <div class="w-full max-w-xs bg-slate-900 rounded-3xl p-5 border border-white/10 shadow-2xl text-white text-center">
+                <div class="text-3xl mb-2">❓</div>
+                <h3 class="text-base font-bold mb-2 text-yellow-400">刪除確認</h3>
+                <p id="confirm-message" class="text-xs text-slate-300 mb-5 leading-relaxed">確定要刪除這道題目嗎？</p>
+                <div class="flex gap-2">
+                    <button id="confirm-no" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-bold transition-all">取消</button>
+                    <button id="confirm-yes" class="flex-1 py-2.5 bg-red-500 hover:bg-red-400 text-white rounded-xl text-sm font-bold transition-all">刪除</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <div class="ui-overlay">
-        <div id="current-lesson-badge" class="text-[10px] bg-white px-3 py-1 rounded-full mb-1 inline-block shadow-sm font-bold text-blue-600">尚未選擇課程</div>
-        <div class="text-4xl font-black text-gray-800" id="score-display">0</div>
-        <div class="text-[10px] text-amber-600 font-bold mt-2" id="progress-display">試煉進度: 0 / 0</div>
-    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score-val');
+        const healthBar = document.getElementById('health-bar');
+        const menu = document.getElementById('menu');
+        const startBtn = document.getElementById('start-btn');
+        const adminEntrance = document.getElementById('admin-entrance');
+        const adminModal = document.getElementById('admin-modal');
+        const closeAdminBtn = document.getElementById('close-admin-btn');
+        const saveQBtn = document.getElementById('save-q-btn');
 
-    <canvas id="gameCanvas"></canvas>
+        // 客製化彈窗元素
+        const passwordModal = document.getElementById('password-modal');
+        const passwordInput = document.getElementById('admin-password-input');
+        const passwordCancel = document.getElementById('password-cancel');
+        const passwordConfirm = document.getElementById('password-confirm');
 
-    <div id="quiz-overlay">
-        <p id="quiz-question" class="text-2xl font-black mb-8 text-center text-gray-800">問題載入中...</p>
-        <div id="quiz-options" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
-    </div>
+        const alertModal = document.getElementById('alert-modal');
+        const alertIcon = document.getElementById('alert-icon');
+        const alertTitle = document.getElementById('alert-title');
+        const alertMessage = document.getElementById('alert-message');
+        const alertOk = document.getElementById('alert-ok');
 
-    <div id="game-over">
-        <h1 class="text-4xl font-black text-red-600 mb-2">挑戰失敗</h1>
-        <p id="fail-msg" class="mb-6 text-gray-500"></p>
-        <button onclick="resetGame()" class="bg-black text-white px-10 py-3 rounded-full font-bold">重試</button>
-    </div>
-    <div id="win-screen">
-        <h1 class="text-4xl font-black text-green-600 mb-6">本課達成！</h1>
-        <button onclick="resetGame()" class="bg-green-600 text-white px-10 py-3 rounded-full font-bold">再玩一次</button>
-    </div>
-</div>
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmMessage = document.getElementById('confirm-message');
+        const confirmYes = document.getElementById('confirm-yes');
+        const confirmNo = document.getElementById('confirm-no');
 
-<script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    
-    let GRAVITY = 0.65, JUMP_FORCE = -13, BASE_SPEED = 7, IS_INVINCIBLE = false;
-    
-    // 預設題目已根據要求修改
-    let lessonData = {
-        "l1": { 
-            name: "第一課：語文基礎", 
-            quizzes: [
-                { q: "下列哪個是纖的造詞？", options: ["纖細", "祖纖", "纖人掌", "優纖"], correct: 0 }
-            ]
+        let width, height;
+        let gameActive = false;
+        let wasRunningBeforeAdmin = false;
+        let score = 0;
+        let health = 100;
+        
+        let bullets = [];
+        let enemies = [];
+        let clouds = []; // 動態雲朵背景
+        let quizSession = null;
+
+        function customAlert(message, title = "系統提示", icon = "⚠️") {
+            alertTitle.innerText = title;
+            alertMessage.innerText = message;
+            alertIcon.innerText = icon;
+            alertModal.classList.remove('hidden');
+            return new Promise((resolve) => {
+                alertOk.onclick = () => {
+                    alertModal.classList.add('hidden');
+                    resolve();
+                };
+            });
         }
-    };
-    let activeLessonId = "l1";
-    let isMenuOpen = false, isQuizActive = false, isGameOver = false;
 
-    // --- 管理者功能 ---
-    function authAdmin() {
-        if (document.getElementById('admin-password').value === 'XU3TP6BJO4') {
-            document.getElementById('admin-auth-section').style.display = 'none';
-            document.getElementById('admin-controls').style.display = 'block';
-            refreshAdminLessonUI();
-        } else alert('密碼錯誤！');
-    }
-
-    function refreshAdminLessonUI() {
-        const manager = document.getElementById('admin-lesson-manager');
-        const select = document.getElementById('q-lesson-target');
-        manager.innerHTML = '';
-        select.innerHTML = '';
-        Object.keys(lessonData).forEach(id => {
-            const item = document.createElement('div');
-            item.className = 'admin-lesson-item';
-            item.innerHTML = `<input type="text" class="admin-input mb-0 flex-1" value="${lessonData[id].name}" onchange="renameLesson('${id}', this.value)">
-                <button onclick="deleteLesson('${id}')" class="text-red-500 font-bold px-2">✕</button>`;
-            manager.appendChild(item);
-            const opt = document.createElement('option');
-            opt.value = id; opt.innerText = lessonData[id].name;
-            select.appendChild(opt);
-        });
-        refreshPlayerMenuUI();
-    }
-
-    function addNewLesson() {
-        const name = document.getElementById('new-lesson-name').value.trim();
-        if (!name) return;
-        const id = "l" + Date.now();
-        lessonData[id] = { name: name, quizzes: [] };
-        document.getElementById('new-lesson-name').value = '';
-        refreshAdminLessonUI();
-    }
-
-    function renameLesson(id, newName) {
-        if (!newName.trim()) return;
-        lessonData[id].name = newName;
-        refreshAdminLessonUI();
-        if (id === activeLessonId) updateBadge();
-    }
-
-    function deleteLesson(id) {
-        if (!confirm('確定要刪除這堂課及其所有題目嗎？')) return;
-        delete lessonData[id];
-        if (activeLessonId === id) {
-            const keys = Object.keys(lessonData);
-            activeLessonId = keys.length > 0 ? keys[0] : null;
-            updateBadge();
+        function customConfirm(message) {
+            confirmMessage.innerText = message;
+            confirmModal.classList.remove('hidden');
+            return new Promise((resolve) => {
+                confirmYes.onclick = () => {
+                    confirmModal.classList.add('hidden');
+                    resolve(true);
+                };
+                confirmNo.onclick = () => {
+                    confirmModal.classList.add('hidden');
+                    resolve(false);
+                };
+            });
         }
-        refreshAdminLessonUI();
-    }
 
-    function addNewQuizForm() {
-        const id = document.getElementById('q-lesson-target').value;
-        if (!id || !lessonData[id]) return alert('請先選擇或新增課程！');
-        const qText = document.getElementById('q-text').value.trim();
-        const opts = [
-            document.getElementById('q-opt0').value.trim(),
-            document.getElementById('q-opt1').value.trim(),
-            document.getElementById('q-opt2').value.trim(),
-            document.getElementById('q-opt3').value.trim()
+        function openPasswordPrompt() {
+            passwordInput.value = "";
+            passwordModal.classList.remove('hidden');
+            return new Promise((resolve) => {
+                passwordConfirm.onclick = () => {
+                    const val = passwordInput.value;
+                    passwordModal.classList.add('hidden');
+                    resolve(val);
+                };
+                passwordCancel.onclick = () => {
+                    passwordModal.classList.add('hidden');
+                    resolve(null);
+                };
+            });
+        }
+
+        const defaultQuizData = [
+            { q: "下列何者為「坪」的正確造詞？", options: ["草坪", "坪價", "坪論", "坪等"], correctVal: "草坪" },
+            { q: "下列何者「拓」的讀音與其他三者不同？", options: ["拓展", "開拓", "拓印", "拓荒"], correctVal: "開拓" },
+            { q: "下列何者為「瞻」的正確造詞？", options: ["瞻心", "大瞻", "臥薪嘗瞻", "瞻望"], correctVal: "瞻望" },
+            { q: "下列何者為「嶄」的正確造詞？", options: ["嶄斷", "嶄露", "嶄示", "嶄翅高飛"], correctVal: "嶄露" },
+            { q: "下列何者為「貫」的正確造詞？", options: ["習貫", "貫軍", "連貫", "貫溉"], correctVal: "連貫" },
+            { q: "下列何者為「羹」的正確造詞？", options: ["羊羹", "羹新", "羹田", "羹種"], correctVal: "羊羹" },
+            { q: "下列何者為「鍥」的正確造詞？", options: ["鍥約", "鍥取", "盜鍥", "鍥薄"], correctVal: "鍥薄" },
+            { q: "下列何者為「愚」的正確造詞？", options: ["愚笨", "愚樂", "愚快", "魷愚"], correctVal: "愚笨" },
+            { q: "下列何者為「赴」的正確造詞？", options: ["赴出", "赴部", "赴宴", "財赴"], correctVal: "赴宴" },
+            { q: "下列何者為「斤」的正確造詞？", options: ["喝斤", "排斤", "公斤", "斤責"], correctVal: "公斤" },
+            { q: "下列何者為「汲」的正確造詞？", options: ["高汲", "汲合", "匯汲", "汲水"], correctVal: "汲水" },
+            { q: "下列何者為「垮」的正確造詞？", options: ["拖垮", "垮獎", "橫垮", "垮越"], correctVal: "拖垮" },
+            { q: "下列何者為「構」的正確造詞？", options: ["構買", "架構", "水構", "演構"], correctVal: "架構" },
+            { q: "下列何者不是「拓」的造詞？", options: ["開拓", "拓荒", "拓展", "拓建"], correctVal: "拓建" },
+            { q: "下列何者為「輩」的正確造詞？", options: ["輩鰭", "準輩", "長輩", "輩迫"], correctVal: "長輩" }
         ];
-        if (!qText || opts.some(o => !o)) return alert('請填寫完整題目！');
-        lessonData[id].quizzes.push({ q: qText, options: opts, correct: 0 });
-        alert('題目已新增！');
-        document.getElementById('q-text').value = '';
-        if (id === activeLessonId) resetGame();
-    }
 
-    function refreshPlayerMenuUI() {
-        const list = document.getElementById('lesson-list');
-        list.innerHTML = '';
-        Object.keys(lessonData).forEach(id => {
-            const btn = document.createElement('button');
-            btn.className = `menu-btn ${id === activeLessonId ? 'active' : ''}`;
-            btn.innerText = lessonData[id].name;
-            btn.onclick = () => selectLesson(id);
-            list.appendChild(btn);
-        });
-    }
+        let masterQuizData = [...defaultQuizData];
+        let currentQuizPool = [];
 
-    function toggleLessonMenu() {
-        isMenuOpen = !isMenuOpen;
-        document.getElementById('lesson-menu').style.display = isMenuOpen ? 'flex' : 'none';
-        if (!isMenuOpen && !isGameOver && !isQuizActive) requestAnimationFrame(gameLoop);
-    }
-
-    function selectLesson(id) {
-        activeLessonId = id;
-        isMenuOpen = false;
-        document.getElementById('lesson-menu').style.display = 'none';
-        updateBadge();
-        resetGame();
-    }
-
-    function updateBadge() {
-        document.getElementById('current-lesson-badge').innerText = activeLessonId ? lessonData[activeLessonId].name : "尚未選擇課程";
-    }
-
-    // --- 遊戲邏輯核心 ---
-    const GROUND_HEIGHT = 80;
-    let score = 0, gameSpeed = BASE_SPEED, frameCount = 0, currentQuizIdx = 0;
-    let stickman, obstacles, lightWalls, banners;
-    let nextWallFrame = 0, nextBannerFrame = 0, bannerToggle = 0;
-
-    class Stickman {
-        constructor() {
-            this.x = 100; this.y = 0; this.dy = 0;
-            this.isGrounded = true; this.animFrame = 0;
-            this.headRadius = 9; this.torsoLen = 28; this.limbLen = 22;
-        }
-        jump() { if (this.isGrounded) { this.dy = JUMP_FORCE; this.isGrounded = false; } }
-        update() {
-            this.dy += GRAVITY; this.y += this.dy;
-            if (this.y > 0) { this.y = 0; this.dy = 0; this.isGrounded = true; }
-            this.animFrame += 0.22 * (gameSpeed / 7);
-        }
-        draw() {
-            const groundY = canvas.height - GROUND_HEIGHT;
-            const currentY = groundY + this.y;
-            ctx.strokeStyle = '#000'; ctx.lineWidth = 4; ctx.lineCap = 'round';
-            const cycle = this.animFrame;
-            
-            // 身體重心起伏
-            const hipX = this.x; 
-            const hipY = currentY - this.torsoLen + 10 - (this.isGrounded ? Math.abs(Math.sin(cycle * 2)) * 4 : 0);
-            const neckX = hipX + Math.sin(0.22) * this.torsoLen;
-            const neckY = hipY - Math.cos(0.22) * this.torsoLen;
-
-            // 關節角度計算
-            let armAngleL = Math.sin(cycle) * 0.8, armAngleR = -Math.sin(cycle) * 0.8;
-            let legAngleL = -Math.sin(cycle) * 0.9, legAngleR = Math.sin(cycle) * 0.9;
-            if (!this.isGrounded) { armAngleL = 0.5; armAngleR = -1.2; legAngleL = -0.4; legAngleR = 0.6; }
-
-            // 畫軀幹與頭
-            ctx.beginPath(); ctx.moveTo(hipX, hipY); ctx.lineTo(neckX, neckY); ctx.stroke();
-            ctx.beginPath(); ctx.arc(neckX + 3, neckY - this.headRadius, this.headRadius, 0, Math.PI * 2); ctx.stroke();
-
-            // 畫肢體 (手跟腳都回來了)
-            this.drawLimb(neckX, neckY, armAngleL - 0.2, this.limbLen, false);
-            this.drawLimb(neckX, neckY, armAngleR - 0.2, this.limbLen, false);
-            this.drawLimb(hipX, hipY, legAngleL, this.limbLen, true);
-            this.drawLimb(hipX, hipY, legAngleR, this.limbLen, true);
-        }
-        drawLimb(startX, startY, angle, length, isLeg) {
-            const midX = startX + Math.sin(angle) * length;
-            const midY = startY + Math.cos(angle) * length;
-            const flex = isLeg ? (angle < 0 ? -0.7 : 0.2) : 1;
-            const endX = midX + Math.sin(angle + flex) * length;
-            const endY = midY + Math.cos(angle + flex) * length;
-            ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(midX, midY); ctx.lineTo(endX, endY); ctx.stroke();
-        }
-    }
-
-    class Obstacle {
-        constructor() { this.x = canvas.width + 50; this.w = 30; this.h = 40+Math.random()*20; }
-        update() { this.x -= gameSpeed; }
-        draw() { ctx.fillStyle = IS_INVINCIBLE ? '#4ade80' : '#333'; ctx.fillRect(this.x, canvas.height-GROUND_HEIGHT-this.h, this.w, this.h); }
-    }
-
-    class LightWall {
-        constructor() { this.x = canvas.width + 100; this.w = 80; }
-        update() { this.x -= gameSpeed; }
-        draw() {
-            const g = ctx.createLinearGradient(this.x, 0, this.x+this.w, 0);
-            g.addColorStop(0,'transparent'); g.addColorStop(0.5,'rgba(255,215,0,0.5)'); g.addColorStop(1,'transparent');
-            ctx.fillStyle = g; ctx.fillRect(this.x, 0, this.w, canvas.height-GROUND_HEIGHT);
-        }
-    }
-
-    class Banner {
-        constructor(ti) {
-            this.msg = ["學習是為了更遠的路", "這不是單純的遊戲，這是進步的過程"][ti%2];
-            this.x = canvas.width+100; this.y = 100;
-        }
-        update() { this.x -= gameSpeed*0.5; }
-        draw() {
-            ctx.fillStyle = 'rgba(59,130,246,0.05)'; ctx.font = 'bold 20px sans-serif';
-            const tw = ctx.measureText(this.msg).width;
-            ctx.fillRect(this.x-10, this.y-25, tw+20, 35);
-            ctx.fillStyle = '#3b82f6'; ctx.fillText(this.msg, this.x, this.y);
-        }
-    }
-
-    function resetGame() {
-        stickman = new Stickman(); obstacles = []; lightWalls = []; banners = [];
-        score = 0; gameSpeed = BASE_SPEED; isGameOver = false; isQuizActive = false;
-        frameCount = 0; currentQuizIdx = 0;
-        nextWallFrame = 180; nextBannerFrame = 360; 
-        document.getElementById('game-over').style.display = 'none';
-        document.getElementById('win-screen').style.display = 'none';
-        document.getElementById('quiz-overlay').style.display = 'none';
-        const qCount = (activeLessonId && lessonData[activeLessonId]) ? lessonData[activeLessonId].quizzes.length : 0;
-        document.getElementById('progress-display').innerText = `試煉進度: 0 / ${qCount}`;
-        requestAnimationFrame(gameLoop);
-    }
-
-    function gameLoop() {
-        if (isGameOver || isQuizActive || isMenuOpen) return;
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.strokeStyle = '#ddd'; ctx.beginPath(); ctx.moveTo(0, canvas.height-GROUND_HEIGHT); ctx.lineTo(canvas.width, canvas.height-GROUND_HEIGHT); ctx.stroke();
-
-        if (frameCount >= nextBannerFrame) {
-            banners.push(new Banner(bannerToggle++));
-            nextBannerFrame = frameCount + 400 + Math.random()*100;
-        }
-        banners.forEach((b,i) => { b.update(); b.draw(); if(b.x < -500) banners.splice(i,1); });
-
-        const bank = activeLessonId ? lessonData[activeLessonId].quizzes : [];
-        if (frameCount >= nextWallFrame && currentQuizIdx < bank.length && lightWalls.length === 0) {
-            lightWalls.push(new LightWall());
-        }
-        lightWalls.forEach((w,i) => {
-            w.update(); w.draw();
-            if (stickman.x > w.x + w.w/2) { isQuizActive = true; showQuiz(bank[currentQuizIdx]); }
-        });
-
-        if (frameCount % 100 === 0 && lightWalls.length === 0) obstacles.push(new Obstacle());
-        obstacles.forEach((obs,i) => {
-            obs.update(); obs.draw();
-            if (!IS_INVINCIBLE && stickman.x+10 > obs.x && stickman.x < obs.x+obs.w && (canvas.height-GROUND_HEIGHT+stickman.y) > canvas.height-GROUND_HEIGHT-obs.h) {
-                isGameOver = true; document.getElementById('fail-msg').innerText = "撞到了！再接再厲。";
-                document.getElementById('game-over').style.display = 'block';
-            }
-            if (obs.x < -50) { obstacles.splice(i,1); score++; document.getElementById('score-display').innerText = score; }
-        });
-
-        stickman.update(); stickman.draw();
-        frameCount++;
-        requestAnimationFrame(gameLoop);
-    }
-
-    function showQuiz(qData) {
-        document.getElementById('quiz-overlay').style.display = 'flex';
-        document.getElementById('quiz-question').innerText = qData.q;
-        const container = document.getElementById('quiz-options');
-        container.innerHTML = '';
-        const shuffled = qData.options.map((o,i) => ({text:o, correct:i===0})).sort(()=>Math.random()-0.5);
-        shuffled.forEach(item => {
-            const b = document.createElement('button'); b.className = 'option-btn'; b.innerText = item.text;
-            b.onclick = () => {
-                if (item.correct) {
-                    currentQuizIdx++;
-                    const bank = lessonData[activeLessonId].quizzes;
-                    document.getElementById('progress-display').innerText = `試煉進度: ${currentQuizIdx} / ${bank.length}`;
-                    isQuizActive = false; document.getElementById('quiz-overlay').style.display = 'none';
-                    lightWalls = []; nextWallFrame = frameCount + 180 + Math.random()*100;
-                    if (currentQuizIdx >= bank.length) { isGameOver = true; document.getElementById('win-screen').style.display = 'block'; }
-                    else requestAnimationFrame(gameLoop);
-                } else {
-                    isGameOver = true; document.getElementById('fail-msg').innerText = "答錯了！請重新挑戰該課程。";
-                    document.getElementById('game-over').style.display = 'block';
-                    document.getElementById('quiz-overlay').style.display = 'none';
+        function loadQuiz() {
+            const saved = localStorage.getItem('sky_fighter_quiz_data');
+            if (saved) {
+                try {
+                    masterQuizData = JSON.parse(saved);
+                } catch(e) {
+                    masterQuizData = [...defaultQuizData];
                 }
-            };
-            container.appendChild(b);
-        });
-    }
-
-    function closeAdminPanel() { document.getElementById('admin-panel').style.display = 'none'; }
-    function toggleAdminPanel() {
-        const p = document.getElementById('admin-panel');
-        p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
-    }
-    function resize() { canvas.width = Math.min(window.innerWidth*0.95, 800); canvas.height = 400; }
-    window.addEventListener('resize', resize); resize();
-    
-    const handleInput = (e) => {
-        if (isQuizActive || isMenuOpen || e.target.closest('#admin-panel')) return;
-        if (e.type === 'touchstart' || e.code === 'Space' || (e.type === 'mousedown' && e.button === 0)) {
-            stickman.jump();
-            if(e.cancelable) e.preventDefault();
+            }
         }
-    };
-    window.addEventListener('keydown', handleInput);
-    window.addEventListener('touchstart', handleInput, {passive:false});
-    window.addEventListener('mousedown', handleInput);
 
-    refreshPlayerMenuUI();
-    updateBadge();
-    resetGame();
-</script>
+        function saveQuiz() {
+            localStorage.setItem('sky_fighter_quiz_data', JSON.stringify(masterQuizData));
+            renderAdminList();
+        }
+
+        function renderAdminList() {
+            const list = document.getElementById('question-list');
+            list.innerHTML = masterQuizData.map((item, i) => `
+                <div class="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5 text-sm">
+                    <div class="truncate pr-4 flex flex-col min-w-0 flex-1">
+                        <span class="text-white/80 truncate font-semibold">${i + 1}. ${item.q}</span>
+                        <span class="text-[10px] text-yellow-400 font-bold mt-0.5">正確答案: ${item.correctVal}</span>
+                    </div>
+                    <button onclick="handleDeleteQuestion(${i})" class="text-red-400 p-2 flex-shrink-0 hover:bg-red-500/10 rounded-lg transition-colors">🗑️</button>
+                </div>
+            `).join('');
+        }
+
+        window.handleDeleteQuestion = async (i) => {
+            const confirmDelete = await customConfirm("確定要刪除這道題目嗎？");
+            if (confirmDelete) { 
+                masterQuizData.splice(i, 1); 
+                saveQuiz(); 
+            }
+        }
+
+        saveQBtn.onclick = async () => {
+            const q = document.getElementById('new-q').value.trim();
+            const opts = [
+                document.getElementById('opt-0').value.trim(),
+                document.getElementById('opt-1').value.trim(),
+                document.getElementById('opt-2').value.trim(),
+                document.getElementById('opt-3').value.trim()
+            ];
+            const cIdx = parseInt(document.getElementById('correct-idx').value);
+            if (!q || opts.some(o => !o)) {
+                return await customAlert("請填寫完整的題目與四個選項內容！", "欄位未填滿", "❌");
+            }
+            masterQuizData.push({ q, options: opts, correctVal: opts[cIdx] });
+            saveQuiz();
+            document.getElementById('new-q').value = "";
+            document.getElementById('opt-0').value = "";
+            document.getElementById('opt-1').value = "";
+            document.getElementById('opt-2').value = "";
+            document.getElementById('opt-3').value = "";
+            await customAlert("題目已成功存入題庫中！", "新增成功", "✅");
+        };
+
+        adminEntrance.onclick = async () => {
+            wasRunningBeforeAdmin = gameActive;
+            gameActive = false;
+            
+            const pw = await openPasswordPrompt();
+            if (pw === "XU3TP6BJO4") {
+                adminModal.classList.remove('hidden');
+                renderAdminList();
+            } else {
+                if (pw !== null) {
+                    await customAlert("授權認證失敗，請輸入正確的授權碼！", "錯誤", "❌");
+                }
+                if (wasRunningBeforeAdmin) {
+                    gameActive = true;
+                    animate();
+                }
+            }
+        };
+
+        closeAdminBtn.onclick = () => {
+            adminModal.classList.add('hidden');
+            if (wasRunningBeforeAdmin) {
+                gameActive = true;
+                animate();
+            }
+        };
+
+        const player = {
+            x: 0, y: 0, targetX: 0, speed: 0.18, 
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                const flameSize = 12 + Math.random() * 12;
+                
+                // 動態噴射火焰
+                const gradFlame = ctx.createLinearGradient(0, 30, 0, 30 + flameSize);
+                gradFlame.addColorStop(0, '#f97316');
+                gradFlame.addColorStop(0.5, '#ef4444');
+                gradFlame.addColorStop(1, 'rgba(239, 68, 68, 0)');
+                ctx.fillStyle = gradFlame;
+                ctx.beginPath(); 
+                ctx.ellipse(0, 35, 10, flameSize, 0, 0, Math.PI * 2); 
+                ctx.fill();
+                
+                // 戰機主翼
+                ctx.fillStyle = '#f1f5f9'; 
+                ctx.beginPath();
+                ctx.moveTo(0, -32); 
+                ctx.lineTo(28, 18); 
+                ctx.lineTo(12, 12); 
+                ctx.lineTo(10, 25);
+                ctx.lineTo(-10, 25); 
+                ctx.lineTo(-12, 12); 
+                ctx.lineTo(-28, 18); 
+                ctx.closePath(); 
+                ctx.fill();
+
+                // 戰機側翼點綴線
+                ctx.fillStyle = '#e2e8f0';
+                ctx.beginPath();
+                ctx.moveTo(0, -10);
+                ctx.lineTo(15, 12);
+                ctx.lineTo(-15, 12);
+                ctx.closePath();
+                ctx.fill();
+
+                // 駕駛艙藍色能量罩
+                ctx.fillStyle = '#06b6d4'; 
+                ctx.beginPath(); 
+                ctx.ellipse(0, -8, 7, 13, 0, 0, Math.PI * 2); 
+                ctx.fill();
+                
+                ctx.restore();
+            },
+            update() {
+                this.x += (this.targetX - this.x) * this.speed;
+                if (this.x < 35) this.x = 35;
+                if (this.x > width - 35) this.x = width - 35;
+            }
+        };
+
+        function resize() {
+            width = canvas.parentElement.clientWidth;
+            height = canvas.parentElement.clientHeight;
+            canvas.width = width; canvas.height = height;
+            player.x = width / 2; player.y = height * 0.85; player.targetX = width / 2;
+        }
+
+        function handleMove(e) {
+            if (!gameActive) return;
+            let cx = e.touches ? e.touches[0].clientX : e.clientX;
+            const rect = canvas.getBoundingClientRect();
+            player.targetX = cx - rect.left;
+        }
+
+        window.addEventListener('resize', resize);
+        canvas.addEventListener('mousemove', handleMove);
+        canvas.addEventListener('touchstart', handleMove, {passive: false});
+        canvas.addEventListener('touchmove', handleMove, {passive: false});
+
+        // 背景雲朵元件 (增加速度感)
+        class Cloud {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * -height;
+                this.size = Math.random() * 80 + 40;
+                this.speed = Math.random() * 1.5 + 0.5;
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.arc(this.x + this.size * 0.5, this.y - this.size * 0.2, this.size * 0.8, 0, Math.PI * 2);
+                ctx.arc(this.x - this.size * 0.5, this.y - this.size * 0.2, this.size * 0.8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            update() {
+                this.y += this.speed;
+                if (this.y > height + 100) {
+                    this.y = -150;
+                    this.x = Math.random() * width;
+                }
+            }
+        }
+
+        // 彈藥系統
+        class Bullet {
+            constructor(x, y) { this.x = x; this.y = y; this.speed = 13; }
+            draw() { 
+                ctx.fillStyle = '#fbbf24'; 
+                ctx.beginPath(); 
+                ctx.arc(this.x, this.y, 4, 0, Math.PI*2); 
+                ctx.fill(); 
+                // 外圍微光
+                ctx.fillStyle = 'rgba(251, 191, 36, 0.4)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 8, 0, Math.PI*2);
+                ctx.fill();
+            }
+            update() { this.y -= this.speed; }
+        }
+
+        class Enemy {
+            constructor(isGold = false) {
+                this.x = Math.random() * (width - 70) + 35;
+                this.y = -60;
+                this.speed = isGold ? 1.8 : (2 + Math.random() * 3);
+                this.hp = isGold ? 5 : 1;
+                this.color = isGold ? '#fbbf24' : '#ef4444';
+                this.isGold = isGold;
+                this.radius = 22;
+            }
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                // 噴射尾氣
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.3)';
+                ctx.beginPath();
+                ctx.ellipse(0, -18, 6, 12, 0, 0, Math.PI*2);
+                ctx.fill();
+
+                // 敵機三角形本體
+                ctx.fillStyle = this.color;
+                ctx.beginPath(); 
+                ctx.moveTo(0, 18); 
+                ctx.lineTo(-22, -12); 
+                ctx.lineTo(22, -12); 
+                ctx.closePath(); 
+                ctx.fill();
+
+                // 引擎裝飾
+                ctx.fillStyle = '#1e293b';
+                ctx.beginPath();
+                ctx.arc(0, -3, 8, 0, Math.PI*2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+            update() { this.y += this.speed; }
+        }
+
+        class Quiz {
+            constructor() {
+                if (currentQuizPool.length === 0) currentQuizPool = [...masterQuizData].sort(()=>Math.random()-0.5);
+                const data = currentQuizPool.pop() || defaultQuizData[0];
+                this.question = data.q;
+                
+                const rawOptions = data.options || ["無選項", "無選項", "無選項", "無選項"];
+                const shuffled = [...rawOptions].sort(() => Math.random() - 0.5);
+                
+                this.options = shuffled;
+                this.correctIndex = shuffled.indexOf(data.correctVal);
+                this.correctVal = data.correctVal;
+                
+                this.y = -120; 
+                this.optionsY = -320; 
+                this.showOptions = false;
+                this.speed = (height * 0.85) / (5 * 60); // 適配4:3螢幕的答題墜落速度
+                setTimeout(() => { if(gameActive) this.showOptions = true; }, 1200);
+            }
+            draw() {
+                // 題目高對比底框
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.95)'; 
+                ctx.fillRect(35, this.y, width - 70, 75);
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(35, this.y, width - 70, 75);
+
+                // 題目文字
+                ctx.fillStyle = '#ffffff'; 
+                ctx.textAlign = 'center'; 
+                ctx.font = 'bold 18px "Microsoft JhengHei", sans-serif';
+                ctx.fillText(this.question, width / 2, this.y + 44);
+                
+                // 繪製四條跑道答案 (4等分)
+                if (this.showOptions) {
+                    const bw = width / 4;
+                    this.options.forEach((opt, i) => {
+                        // 四個跑道間的分隔虛線
+                        if (i > 0) {
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+                            ctx.setLineDash([5, 10]);
+                            ctx.beginPath();
+                            ctx.moveTo(i * bw, 0);
+                            ctx.lineTo(i * bw, height);
+                            ctx.stroke();
+                            ctx.setLineDash([]);
+                        }
+
+                        // 選項主體卡片 (流線微帶立體感)
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)'; 
+                        ctx.fillRect(i * bw + 8, this.optionsY, bw - 16, 56);
+                        ctx.strokeStyle = '#e2e8f0';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(i * bw + 8, this.optionsY, bw - 16, 56);
+                        
+                        // 選項答案文字
+                        ctx.fillStyle = '#0f172a'; 
+                        ctx.font = 'bold 15px "Microsoft JhengHei", sans-serif';
+                        ctx.fillText(opt, i * bw + bw / 2, this.optionsY + 35);
+                    });
+                }
+            }
+            update() {
+                if (this.y < 80) this.y += 6; 
+                if (this.showOptions) this.optionsY += this.speed;
+            }
+        }
+
+        let frameCount = 0;
+        let lastQuizTime = 0;
+
+        function animate() {
+            if (!gameActive) return;
+
+            // 畫出蔚藍漸層天空
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
+            skyGrad.addColorStop(0, '#0284c7');
+            skyGrad.addColorStop(1, '#38bdf8');
+            ctx.fillStyle = skyGrad; 
+            ctx.fillRect(0, 0, width, height);
+
+            // 背景動態雲朵繪製與更新
+            clouds.forEach(c => { c.update(); c.draw(); });
+
+            player.update(); 
+            player.draw();
+
+            // 定時開火
+            if (frameCount % 9 === 0) {
+                bullets.push(new Bullet(player.x, player.y - 25));
+            }
+
+            // 沒有題目時生成常規敵機
+            if (!quizSession) {
+                if (frameCount % 45 === 0) {
+                    enemies.push(new Enemy(Math.random() < 0.12));
+                }
+            }
+
+            // 考題間隔觸發 (每隔一段時間觸發一次問答)
+            if (!quizSession && Date.now() - lastQuizTime > 10000 && frameCount > 100) {
+                quizSession = new Quiz();
+            }
+
+            // 彈藥更新
+            bullets.forEach((b, i) => { 
+                b.update(); 
+                b.draw(); 
+                if (b.y < -10) bullets.splice(i, 1); 
+            });
+
+            // 敵機更新與碰撞判定
+            enemies.forEach((e, ei) => {
+                e.update(); 
+                e.draw();
+
+                // 彈藥與敵機碰撞
+                bullets.forEach((b, bi) => {
+                    if (Math.hypot(b.x - e.x, b.y - e.y) < e.radius + 4) {
+                        e.hp--; 
+                        bullets.splice(bi, 1);
+                        if (e.hp <= 0) {
+                            enemies.splice(ei, 1);
+                            score += e.isGold ? 500 : 100;
+                            scoreEl.innerText = score.toString().padStart(4, '0');
+                        }
+                    }
+                });
+
+                // 玩家飛機與敵機碰撞
+                if (Math.hypot(player.x - e.x, player.y - e.y) < 40) {
+                    health -= 25; 
+                    healthBar.style.width = `${health}%`;
+                    enemies.splice(ei, 1);
+                    if (health <= 0) {
+                        gameOver("任務失敗，戰機受損墜毀！");
+                    }
+                }
+
+                if (e.y > height + 60) enemies.splice(ei, 1);
+            });
+
+            // 考題答題判定
+            if (quizSession) {
+                quizSession.update(); 
+                quizSession.draw();
+
+                // 玩家切入答題通道
+                if (quizSession.showOptions && quizSession.optionsY + 56 > player.y - 10) {
+                    const idx = Math.floor(player.x / (width / 4));
+                    if (idx === quizSession.correctIndex) {
+                        score += 1000; 
+                        scoreEl.innerText = score.toString().padStart(4, '0');
+                        quizSession = null; 
+                        lastQuizTime = Date.now();
+                    } else {
+                        gameOver(`答錯囉！\n正確造詞應為：${quizSession.correctVal}`);
+                    }
+                }
+            }
+
+            frameCount++;
+            requestAnimationFrame(animate);
+        }
+
+        function gameOver(msg) {
+            gameActive = false;
+            menu.classList.remove('hidden');
+            menu.querySelector('h1').innerText = "MISSION FAILED";
+            menu.querySelector('p').innerText = msg + "\n本次最終得分: " + score;
+            menu.querySelector('p').classList.remove('text-yellow-400');
+            menu.querySelector('p').classList.add('text-red-400');
+        }
+
+        function startGame() {
+            score = 0; 
+            health = 100; 
+            scoreEl.innerText = "0000"; 
+            healthBar.style.width = "100%";
+            bullets = []; 
+            enemies = []; 
+            quizSession = null;
+            
+            // 雲朵初始
+            clouds = [];
+            for (let i = 0; i < 6; i++) {
+                clouds.push(new Cloud());
+            }
+
+            currentQuizPool = [...masterQuizData].sort(()=>Math.random()-0.5);
+            lastQuizTime = Date.now(); 
+            gameActive = true; 
+            
+            menu.classList.add('hidden');
+            animate();
+        }
+
+        startBtn.addEventListener('click', startGame);
+        
+        window.onload = () => { 
+            loadQuiz(); 
+            resize(); 
+            
+            // 首次加載渲染背景
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
+            skyGrad.addColorStop(0, '#0284c7');
+            skyGrad.addColorStop(1, '#38bdf8');
+            ctx.fillStyle = skyGrad; 
+            ctx.fillRect(0, 0, width, height);
+            
+            player.draw(); 
+        };
+    </script>
 </body>
 </html>
