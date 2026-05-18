@@ -82,6 +82,24 @@
                     </button>
                 </div>
             </div>
+
+            <div id="victory-menu" class="hidden absolute inset-0 flex items-center justify-center bg-slate-950/85 pointer-events-auto backdrop-blur-md px-6">
+                <div class="text-center p-8 bg-slate-900/90 rounded-3xl border-2 border-yellow-400 shadow-[0_0_40px_rgba(234,179,8,0.4)] max-w-sm w-full transition-all transform scale-100">
+                    <div class="inline-block p-4 bg-yellow-500/20 rounded-full mb-3 text-4xl animate-bounce">🏆</div>
+                    <h1 class="text-3xl font-black mb-1 tracking-tight text-yellow-400 drop-shadow-md">恭喜你完成了挑戰!</h1>
+                    <p class="mb-5 text-xs text-slate-300 leading-relaxed">
+                        你真棒！所有的國語試題都難不倒你！<br>
+                        你已成功守護了文字王國的天空！
+                    </p>
+                    <div class="bg-slate-950/60 rounded-2xl py-3 px-4 mb-6 border border-white/5 shadow-inner">
+                        <p class="text-[9px] uppercase tracking-widest text-slate-400 font-bold">FINAL SCORE</p>
+                        <p id="victory-score-val" class="text-3xl font-black text-green-400 tracking-wider">0000</p>
+                    </div>
+                    <button id="victory-restart-btn" class="w-full py-4 bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-slate-950 font-black rounded-full transition-all active:scale-95 shadow-[0_4px_14px_rgba(245,158,11,0.4)] text-base tracking-wider">
+                        再玩一次
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div id="admin-modal" class="hidden absolute inset-0 bg-slate-950/95 flex items-center justify-center p-6 admin-modal overflow-y-auto no-scrollbar backdrop-blur-lg">
@@ -167,6 +185,9 @@
         const scoreEl = document.getElementById('score-val');
         const healthBar = document.getElementById('health-bar');
         const menu = document.getElementById('menu');
+        const victoryMenu = document.getElementById('victory-menu');
+        const victoryScoreVal = document.getElementById('victory-score-val');
+        const victoryRestartBtn = document.getElementById('victory-restart-btn');
         const startBtn = document.getElementById('start-btn');
         const adminEntrance = document.getElementById('admin-entrance');
         const adminModal = document.getElementById('admin-modal');
@@ -333,7 +354,6 @@
             await customAlert("題目已成功存入題庫中！", "新增成功", "✅");
         };
 
-        // 齒輪後台按鈕觸發
         adminEntrance.onclick = async () => {
             wasRunningBeforeAdmin = gameActive;
             gameActive = false;
@@ -630,7 +650,6 @@
                 if (e.y > height + 60) enemies.splice(ei, 1);
             });
 
-            // 7. 考題答題判定
             if (quizSession) {
                 quizSession.update(); 
                 quizSession.draw();
@@ -643,6 +662,11 @@
                         scoreEl.innerText = score.toString().padStart(4, '0');
                         quizSession = null; 
                         lastQuizTime = Date.now();
+
+                        // 判斷是否「所有的題目都填答正確」
+                        if (currentQuizPool.length === 0) {
+                            gameVictory();
+                        }
                     } else {
                         gameOver(`答錯囉！\n正確造詞應為：${quizSession.correctVal}`);
                     }
@@ -662,7 +686,18 @@
             menu.querySelector('p').classList.add('text-red-400');
         }
 
-        function startGame() {
+        function gameVictory() {
+            gameActive = false;
+            victoryScoreVal.innerText = score.toString().padStart(4, '0');
+            victoryMenu.classList.remove('hidden');
+        }
+
+        async function startGame() {
+            if (masterQuizData.length === 0) {
+                await customAlert("題庫裡沒有任何題目喔！請先至管理中心新增題目。", "無法開始遊戲", "⚠️");
+                return;
+            }
+            
             score = 0; 
             health = 100; 
             scoreEl.innerText = "0000"; 
@@ -677,15 +712,18 @@
                 clouds.push(new Cloud(true)); // 首批雲朵隨機分佈在螢幕上
             }
 
+            // 複製並隨機打亂題庫
             currentQuizPool = [...masterQuizData].sort(()=>Math.random()-0.5);
             lastQuizTime = Date.now(); 
             gameActive = true; 
             
             menu.classList.add('hidden');
+            victoryMenu.classList.add('hidden');
             animate();
         }
 
         startBtn.addEventListener('click', startGame);
+        victoryRestartBtn.addEventListener('click', startGame);
         
         window.onload = () => { 
             loadQuiz(); 
